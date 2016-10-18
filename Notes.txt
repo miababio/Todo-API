@@ -1,0 +1,13 @@
+                                    NOTES
+                                    -----
+                                    
+Installing Postman
+    - Make API requests quickly, so you don't have to keep typing URLs and whatnot
+    - Requires Chrome for extension (unless you do standalone app I think)
+    
+        
+
+                                  Examples
+                                  --------
+                            
+Example 1 - 
