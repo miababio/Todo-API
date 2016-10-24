@@ -25,6 +25,18 @@ app.get("/todos", function(req, res) {
 });
 
 // GET /todos:id
+app.get("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    // iterate over todos array, find the match
+    //if do, send res.json with match
+    var matched = null;
+    for(var i = 0; i < todos.length; i++)
+    {
+        if(todos[i].id === todoID)
+            matched = todos[i];
+    }
+    matched !== null? res.json(matched) : res.status(404).send();
+});
 
 app.listen(PORT, function() {
    console.log(`Express listening on port ${PORT}!`);
