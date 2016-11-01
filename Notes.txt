@@ -60,11 +60,51 @@ Get Todo By ID
         - res.status(<enter number here>).send(); is from Express
     - NOTE: todos[i].id === todoID
         - req.params.whatever will always return a STRING
-            - This is why === didn;t work before. You were trying to check a number against a string, and === is strict checking
+            - This is why === didn't work before. You were trying to check a number against a string, and === is strict checking
             
 Postman Environments
-    - 
+    - Will let you create multiple environments so you can test code on your local server, as well the the Heroku app
+    - Hit the gear icon next to Environments
+        - Click Add
+        - There you can add a keyword (environment variable) and give it a value (key/value)
+            - Ex: Key: apiUrl, Value: http://localhost:3000
+    - Once added, you can use the environment variables to test your requests, instead of having to go up and switch the url back and forth like before
+        - Ex: GET http://localhost:3000/todos now becomes -> GET {{apiUrl}}/todos
+    - To use the environment variable, you surround it in curly braces
+        - {{<environment_variable_here>}}
 
+Creating New Todos
+    - Going to let users add their own todos through the API
+        - using the POST request
+    - POSTs is different than GETs
+        - POST can take data (such as todo descriptions, todo completion status)
+        - This let's us send a JSON object with out request, so when the server receives the request, it can directly add that JSON data to the todos array
+        
+    - app.post("/todos", function(req, res) {
+    
+      });
+      
+        - We're going to have acces to whatever data was sent with the request. To handle it, need to install body-parser(npm)
+            - Version 1.13.3, latest is 1.15.2
+            
+    - app.use(bodyParser.json());
+    
+        - This let's us use what ever JSON gets sent in the request
+            - using req.body
+    - See Example 3
+        - Basically, takes the data we entered and spits it back out
+    - Create a new todo item using the REST API
+        - See Example 4
+    - Note there are things wron with the code:
+        - No Validation: Anything can be added to the todos array at this point
+        - No checking completion status: Whether data was added successfully or not
+        - Error handling?
+        - Will these EVER get solved?!?!?
+            - Tune in next time...
+            
+Refactoring with Underscore
+    - 
+ 
                                   Examples
                                   --------
                             
@@ -139,5 +179,114 @@ app.listen(PORT, function() {
 });
 
 
-Example 3 -
+Example 3 - POST request example
 ---------
+var express = require("express");
+var bodyParser = require("body-parser");
+
+var app = express();
+var PORT = process.env.PORT || 3000;
+var todos = [];
+
+app.use(bodyParser.json());
+
+// POST /todos
+app.post("/todos", function(req, res) {
+    var body = req.body;
+    console.log(`description: ${body.description}`);
+    res.json(body);
+});
+
+
+app.listen(PORT, function() {
+   console.log(`Express listening on port ${PORT}!`);
+});
+
+    In Postman
+    ----------
+    - Select a POST request
+    - Type in "{{apiUrl}}/todos"
+    - Underneath, click on Body->raw, and change the dropdown to "application/json"
+    - In the provided area, type:
+        - {
+	         "description": "Walk the dog",
+	         "completed": false
+          }
+    - Hit Send and see results
+        - Should display the exact same JSON you typed in
+        - Console should display "description: Walk the dog"
+        
+        
+Example 4 - Create a new todo item using REST API
+---------
+var express = require("express");
+var bodyParser = require("body-parser");
+
+var app = express();
+var PORT = process.env.PORT || 3000;
+var todos = [];
+var todoNextId = 1;
+
+app.use(bodyParser.json());
+
+app.get("/", function (req, res) {
+    res.send("Todo API Root");
+});
+
+// GET /todos
+app.get("/todos", function(req, res) {
+    res.json(todos);
+});
+
+// GET /todos:id
+app.get("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    // iterate over todos array, find the match
+    //if do, send res.json with match
+    var matched = null;
+    for(var i = 0; i < todos.length; i++)
+    {
+        if(todos[i].id === todoID)
+            matched = todos[i];
+    }
+    matched !== null? res.json(matched) : res.status(404).send();
+});
+
+// POST /todos
+app.post("/todos", function(req, res) {
+    var body = req.body;
+    
+    //add id field
+    body.id = todoNextId++;
+    
+    //push body in array
+    todos.push(body);
+    
+    res.json(body);
+});
+
+
+app.listen(PORT, function() {
+   console.log(`Express listening on port ${PORT}!`);
+});
+
+    In Postman
+    ----------
+    - Select a POST request
+    - Type in "{{apiUrl}}/todos"
+    - Underneath, click on Body->raw, and change the dropdown to "application/json"
+    - In the provided area, type:
+        - {
+	         "description": "Walk the dog",
+	         "completed": false
+          }
+    - Hit Send
+    - In the provided area again, type:
+        - {
+	         "description": "something else",
+	         "completed": true
+          }
+    - Hit Send
+    - Go to GET request and see results
+        - Should display all your todos that you made :-D
+        
