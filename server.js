@@ -1,5 +1,6 @@
 var express = require("express");
 var bodyParser = require("body-parser");
+var _ = require("underscore");
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -20,20 +21,16 @@ app.get("/todos", function(req, res) {
 // GET /todos:id
 app.get("/todos/:id", function(req, res) {
     var todoID = parseInt(req.params.id, 10);
-    // iterate over todos array, find the match
-    //if do, send res.json with match
-    var matched = null;
-    for(var i = 0; i < todos.length; i++)
-    {
-        if(todos[i].id === todoID)
-            matched = todos[i];
-    }
-    matched !== null? res.json(matched) : res.status(404).send();
+    var matched = _.findWhere(todos, {id: todoID});
+    matched !== undefined? res.json(matched) : res.status(404).send();
 });
 
 // POST /todos
 app.post("/todos", function(req, res) {
     var body = req.body;
+    
+    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0)
+        return res.status(400).send(); // 400 = bad data sent
     
     //add id field
     body.id = todoNextId++;

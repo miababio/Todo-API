@@ -103,7 +103,35 @@ Creating New Todos
             - Tune in next time...
             
 Refactoring with Underscore
+    - (push to heroku when you get home)
+    - Utility library that let's us manage objects, arrays, etc. better
+        - Functional programming methods and whatnot (find, filter, map, etc)
+    - Using current version (1.8.3)
+        - Side Note: Adding '^' before a version in package.json indicates that when you fetch your modules from npm, it will only update to a newer version if it's a minor update.
+            - Ex: ^1.8.3
+                - If 1.8.4 came out, package.json would update to that
+                - If 2.1.5 came out (major change), package.json would NOT update to that
+    - Most use the "_" character to use the underscore variable
+        - var _ = require("underscore");
+    - Use underscore to refactor our current methods of getting todos by ID, and posting todos
+    - See Example 5
+    - We're also using underscore to add validation when creating and posting todos
+        - See Example 6
+    - Still getting the issue that we can POST whatever data we want to the todos
+        - Ex: In postman, type:
+        
+            {
+                "description": "Visit family and friends",
+                "completed": true,
+                "hack": "Some bad data"
+            }
+            
+              and it's valid!
+
+Underscore Challenge
     - 
+    
+    
  
                                   Examples
                                   --------
@@ -290,3 +318,46 @@ app.listen(PORT, function() {
     - Go to GET request and see results
         - Should display all your todos that you made :-D
         
+        
+Example 5 - Refactoring getting todos with Underscore
+---------
+From:
+
+app.get("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    // iterate over todos array, find the match
+    //if do, send res.json with match
+    var matched = null;
+    for(var i = 0; i < todos.length; i++)
+    {
+        if(todos[i].id === todoID)
+            matched = todos[i];
+    }
+    matched !== null? res.json(matched) : res.status(404).send();
+});
+
+To:
+
+app.get("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var matched = _.findWhere(todos, {id: todoID});
+    matched !== undefined? res.json(matched) : res.status(404).send();
+});
+
+        
+Example 6 - Refactoring posting/creating todos with Underscore (adding validation)
+---------
+// POST /todos
+app.post("/todos", function(req, res) {
+    var body = req.body;
+    
+    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0)
+        return res.status(400).send(); // 400 = bad data sent
+    
+    //add id field
+    body.id = todoNextId++;
+    //push body in array
+    todos.push(body);
+    
+    res.json(body);
+});
