@@ -129,7 +129,12 @@ Refactoring with Underscore
               and it's valid!
 
 Underscore Challenge
-    - 
+    - How to get rid of data we don't want?
+        - Use the pick() method (from Underscore library)
+        - pick(<object>, <key(s) you want to accept (string)>)
+            - Returns a copy of the same object, except filtered to only show the values you whitelisted as keys
+            - Ex: var body = _.pick(req.body, "description", "completed");      
+    - push to heroku
     
     
  

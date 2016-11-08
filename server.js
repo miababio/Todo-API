@@ -27,14 +27,16 @@ app.get("/todos/:id", function(req, res) {
 
 // POST /todos
 app.post("/todos", function(req, res) {
-    var body = req.body;
+    var body = _.pick(req.body, "description", "completed");
     
     if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0)
         return res.status(400).send(); // 400 = bad data sent
     
-    //add id field
+    // set body.desc to be trimmed value
+    body.description = body.description.trim();
+    
     body.id = todoNextId++;
-    //push body in array
+    
     todos.push(body);
     
     res.json(body);
