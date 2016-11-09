@@ -134,6 +134,12 @@ Underscore Challenge
         - pick(<object>, <key(s) you want to accept (string)>)
             - Returns a copy of the same object, except filtered to only show the values you whitelisted as keys
             - Ex: var body = _.pick(req.body, "description", "completed");      
+
+Deleting Todos By ID
+    - Using the DELETE api method
+        - app.delete(<url> <callback_function(req, res){} )
+    - See Example 7
+    - Similar to what we did with GET (getting a todo by ID)
     - push to heroku
     
     
@@ -365,4 +371,20 @@ app.post("/todos", function(req, res) {
     todos.push(body);
     
     res.json(body);
+});
+
+
+Example 7 - Delete Todo By ID
+---------
+app.delete("/todos/:id", function(request, response) {
+    var todoID = parseInt(request.params.id, 10);
+    var matched = _.findWhere(todos, {id: todoID});
+    if(matched === undefined)
+        response.status(400).send();
+    else
+    {
+        var newTodos = _.without(todos, matched);
+        todos = newTodos;
+        response.json(matched);
+    }
 });
