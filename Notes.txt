@@ -142,6 +142,19 @@ Deleting Todos By ID
     - Similar to what we did with GET (getting a todo by ID)
     - push to heroku
     
+Updating Todos
+    - Use the PUT method
+        - Similar setup to POST
+    - We don't necessarily have to check if the todo exists, BUT if it does, we have to make sure it meets certain standards
+    - Using the method "hasOwnProperty" helps chack for validation that a property exists
+        - Ex: body.hasOwnProperty("completed") // Checks to see if this property exists
+            - Returns a boolean
+    - Using the extend(<dest>, <source>) method to copy/overwrite one object to another
+        - Ex: _.extend(matched, validAttributes);
+    - See Example 8
+    
+Passing Variables By Reference
+    - 
     
  
                                   Examples
@@ -387,4 +400,36 @@ app.delete("/todos/:id", function(request, response) {
         todos = newTodos;
         response.json(matched);
     }
+});
+
+
+Example 8 - Updating Todos By ID
+---------
+app.put("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var matched = _.findWhere(todos, {id: todoID});
+    var body = _.pick(req.body, "description", "completed");
+    var validAttributes = {}; // items we want to add to todo
+    
+    if(!matched)
+        return res.status(404).send(); // With send, it automatically stop below code from executing
+    
+    if(body.hasOwnProperty("completed") && _.isBoolean(body.completed))
+        validAttributes.completed = body.completed;
+    else if(body.hasOwnProperty("completed")) // entered a property, but it's bad input (not a boolean)
+    {   
+        return res.status(400).send();
+    }
+           
+    if(body.hasOwnProperty("description") && _.isString(body.description) && body.description.trim().length > 0)
+        validAttributes.description = body.description;
+    else if(body.hasOwnProperty("description")) // entered a description, but it's bad input
+    {  
+        return res.status(400).send();
+    }
+    
+    // matched gets changed explicitly because objects in Javascript are pass by reference
+    _.extend(matched, validAttributes); 
+    
+    res.json(matched);
 });

@@ -56,6 +56,33 @@ app.delete("/todos/:id", function(request, response) {
     }
 });
 
+// PUT /todos/:id
+app.put("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var matched = _.findWhere(todos, {id: todoID});
+    var body = _.pick(req.body, "description", "completed");
+    var validAttributes = {}; // items we want to add to todo
+    
+    if(!matched)
+        return res.status(404).send(); // With send, it automatically stop below code from executing
+    
+    if(body.hasOwnProperty("completed") && _.isBoolean(body.completed))
+        validAttributes.completed = body.completed;
+    else if(body.hasOwnProperty("completed"))
+    {   // entered a property, but it's bad input (not a boolean)
+        return res.status(400).send();
+    }
+           
+    if(body.hasOwnProperty("description") && _.isString(body.description) && body.description.trim().length > 0)
+        validAttributes.description = body.description;
+    else if(body.hasOwnProperty("description"))
+    {   // entered a description, but it's bad input
+        return res.status(400).send();
+    }
+    
+    _.extend(matched, validAttributes); // matched gets changed explicitly cuz objects in Javascript are pass by reference
+    res.json(matched);
+});
 
 app.listen(PORT, function() {
    console.log(`Express listening on port ${PORT}!`);
