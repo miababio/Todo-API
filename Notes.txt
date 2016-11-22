@@ -154,6 +154,59 @@ Updating Todos
     - See Example 8
     
 Passing Variables By Reference
+
+    - var person = {
+        name: "Mike",
+        age: 21
+      };
+
+      function updatePerson(obj) {
+        obj = {
+            name: "Mike",
+            age: 23
+        };
+      }
+
+      updatePerson(person);
+      console.log(person);
+      
+       - In the console, person outputs as { name: 'Mike', age: 21 }
+       - age wasn't updated because we're setting value = something within the function
+       - To update the info in person, we need to mutate it, or actually manipulate the data itself (reference)
+       - Ex:
+      
+           function updatePerson(obj) {
+             obj.age = 23;
+           }
+      
+          - Here was aren't assigning a new variable to obj, which made us lose the reference before
+          - Calling something from the original variable changes the value
+          
+    - Array Example
+        - See Example 9
+        
+    - Debugging
+        - You can use the "debugger" keyword to activate Node's debugger
+        - Put "debugger" in your code to have the debuggre stop on that line (like a breakpoint)
+        - You debug using the Terminal
+            - To start debugging, type "node debug <file you want to debug>"
+                - Ex: node debug variable-playground.js
+            - In the terminal
+                - debugger stops on first line that isn't commented out code
+                - use "cont" -> continue in code
+            - Say we wanted to check the status of a variable
+                - While debugging, type "repl" to enter debug repl
+                    - Can use this area to inspect/check on variables w/in the program
+                    - Ex: try typing gradesArr
+                        - displays [15, 37, 99]
+                    - You can also modify the variable directly
+                        - Ex: gradesArr.push(11) // displays 4 (4 values in array now)
+                              gradesArr          // displays [15, 37, 99, 11]
+                    - To Exit debug repl, hit Ctrl + C
+                - To stop debugging the program (but still be in Debug mode), type "kill" in the terminal
+                - To quit debug mode, type "quit" in the terminal
+                    
+Filtering By Todo Completed Status
     - 
     
  
@@ -433,3 +486,42 @@ app.put("/todos/:id", function(req, res) {
     
     res.json(matched);
 });
+
+
+Example 9 - Passing variables by Reference
+---------
+//Object Example
+var person = {
+    name: "Mike",
+    age: 21
+};
+
+function updatePerson(obj) {
+    --INCORRECT--
+    // obj = {
+    //    name: "Mike",
+    //    age: 23
+    // };
+    
+    --CORRECT--
+    obj.age = 23;
+}
+
+updatePerson(person);
+console.log(person);
+
+// Array Example
+var grades = [15, 37];
+
+function addGrades(gradesArr)
+{
+    // gradesArr = [15, 37, 99]; --INCORRECT--
+    gradesArr.push(99);          --CORRECT--
+}
+
+addGrades(grades);
+console.log(grades);
+
+
+Example 10 -
+----------
