@@ -227,7 +227,10 @@ Filtering By Todo Completed Status
             - Similar to findWhere, except this returns an array containing ALL matches
         - See Example 10
         - push to heroku
-    
+        
+Searching By Todo Description
+    - Using the "q" parameter
+    - See Example 11
  
                                   Examples
                                   --------
@@ -558,4 +561,24 @@ app.get("/todos", function(req, res) {
 });
 
 
-Example 11 - 
+Example 11 - Searching Todo By Desription
+----------
+// GET /todos?completed=true&q=house
+app.get("/todos", function(req, res) {
+    var queryParams = req.query;
+    var filteredTodos = todos;
+
+    if(queryParams.hasOwnProperty("completed") && queryParams.completed === 'true')
+        filteredTodos = _.where(filteredTodos, {completed: true});
+    else if(queryParams.hasOwnProperty("completed") && queryParams.completed === 'false')
+        filteredTodos = _.where(filteredTodos, {completed: false}); 
+        
+    // did !== instead of > -1 
+    // toLowerCase to fix case sensitivity
+    if(queryParams.hasOwnProperty("q") && queryParams.q.length > 0)
+        filteredTodos = _.filter(filteredTodos, function(todo) {
+            return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) !== -1? true : false; 
+        });
+    
+    res.json(filteredTodos);
+});
