@@ -231,6 +231,18 @@ Filtering By Todo Completed Status
 Searching By Todo Description
     - Using the "q" parameter
     - See Example 11
+    
+SECTION 7 - Working with a Real Database
+----------------------------------------
+Installing Sequelize and Sqlite3
+    - Both npm modules
+    - Sequelize -> version 3.5.1, I can only get 3.27.0 (3.5.1 doesn't exist anymore?)
+    - Sqlite3 -> version 3.0.10, latest is 3.1.8
+        - Need to figure out how to work. updated both node-gyp and node-pre-gyp
+        - Downloaded source and tried to build it, didnt work
+        - tried npm install without the version, didnt work
+        - downloaded source and triend installing from source folder
+    
  
                                   Examples
                                   --------
