@@ -187,7 +187,7 @@ Passing Variables By Reference
         
     - Debugging
         - You can use the "debugger" keyword to activate Node's debugger
-        - Put "debugger" in your code to have the debuggre stop on that line (like a breakpoint)
+        - Put "debugger" in your code to have the debugger stop on that line (like a breakpoint)
         - You debug using the Terminal
             - To start debugging, type "node debug <file you want to debug>"
                 - Ex: node debug variable-playground.js
@@ -207,7 +207,26 @@ Passing Variables By Reference
                 - To quit debug mode, type "quit" in the terminal
                     
 Filtering By Todo Completed Status
-    - 
+    - Right now, we can't search a task by its text (description, etc)
+    - Right now, we can return/filter a task by its completion status (can't get just not completed ones)
+    
+    Let's fix that now, shall we? ;-)
+    
+    - Query Parameters
+        - Comes at the end of your URL
+        - It's the '?' followed by a query
+        - Key,value pair
+        - Can have multiple queries with the '&'
+            - Ex: {{apiUrl}}/todos?key=value&a=b&completed=true
+        - Ex: {{apiUrl}}/todos?completed=true
+        - You can access the query parameter by the request object in your route's callback
+            - Doesn't have to be in the get URL
+            - Ex: var queryParams = req.query
+                - Similar to req.body, req.params
+        - Using the .where(<array you want to check>, <what to search by (object)) method (underscore)
+            - Similar to findWhere, except this returns an array containing ALL matches
+        - See Example 10
+        - push to heroku
     
  
                                   Examples
@@ -523,5 +542,20 @@ addGrades(grades);
 console.log(grades);
 
 
-Example 10 -
+Example 10 - Query Parameters - Search By Completed Status
 ----------
+// GET /todos?completed=true
+app.get("/todos", function(req, res) {
+    var queryParams = req.query;
+    var filteredTodos = todos;
+
+    if(queryParams.hasOwnProperty("completed") && queryParams.completed === 'true')
+        filteredTodos = _.where(filteredTodos, {completed: true});
+    else if(queryParams.hasOwnProperty("completed") && queryParams.completed === 'false')
+        filteredTodos = _.where(filteredTodos, {completed: false}); 
+   
+    res.json(filteredTodos);
+});
+
+
+Example 11 - 
