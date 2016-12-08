@@ -237,11 +237,89 @@ SECTION 7 - Working with a Real Database
 Installing Sequelize and Sqlite3
     - Both npm modules
     - Sequelize -> version 3.5.1, I can only get 3.27.0 (3.5.1 doesn't exist anymore?)
-    - Sqlite3 -> version 3.0.10, latest is 3.1.8
+    - Sqlite3 -> version 3.0.10, latest is 3.1.8 (using latest)
         - Need to figure out how to work. updated both node-gyp and node-pre-gyp
         - Downloaded source and tried to build it, didnt work
         - tried npm install without the version, didnt work
-        - downloaded source and triend installing from source folder
+        - downloaded source and tried installing from source folder
+        - For now, works at home, so just copy it
+        
+    - Sequelize let's you manage your data as javascript objects/arrays, and does all the heavy lifting in between to convert them to SQLite calls to your database
+        - Works across multiple databases (MySQL, MariaDB, PostgresSQL, etc.)
+    - Small sequelize example
+        - See Example 12
+    
+    - var sequelize = new Sequelize(undefined, undefined, undefined, <object>);
+        - have to create a new instance of Sequelize to use it
+    
+    - sequelize.sync().then(function() {
+         console.log("Everything is synced");
+      });
+        - sync() returns a Promise, which is why we can use the then() method after
+        - calling sync() syncs your objects you set up, and creates a database like them
+    - To define a model -> sequelize.define(<model name>, <attribute configuration>)
+        - This is equivalent to using SQL statements to create each model (create table BLAHBLAH VARCHAR(10), etc..)
+        - MUCH easier/faster instead of trying to to complex SQL statements and whatnot
+    - Adding an entry to our table
+        - See Example 13
+            - create() also returns a Promise, which is why we can use the then() method after
+            - If you try logging the Todo in Command Prompt, you get a whole bunch of data back
+            - Scroll up to see what was actually inserted into the table
+                - Other than ID, our description and completed field was added
+                - Sequelize also gives us a createdAt and updatedAt field for convenience
+                    - Optional, but its recommended to leave them on 
+    - To view our database
+        - Install SQLite DB Browser (google it)
+        - Once open, open your database
+        - Click "Browse Data" tab
+        - Select "todos" from Tables dropdown
+        
+Adding Model Validation & Fetching Models
+    - Multiple way to validate using sequelize
+    - One way -> allowNull
+        - Put that in a field to ensure you have to provide that field (like in SQL)
+    - Other validations can go in a "validate" object
+        - Ex: "notEmpty" -> Prevents you from inputting an empty string as valid input
+        - Ex: var Todo = sequelize.define('todo', {
+                 description: {
+                 type: Sequelize.STRING,
+                 allowNull: false,
+                 validate: {
+                    notEmpty: true
+                 }   
+              }});
+              
+    - How to fetch data from the database
+        - Use the findById(<id>) method
+            - Ex: Todo.findById(1);
+            - If found, make it pretty by using JSON -> console.log(todo.toJSON());
+        - Another way is to use the findAll(<object with conditions>) method
+            - Gets all results that match the condition (like in SQL - seeing a pattern yet?)
+            - returns results as an array
+            
+            - Ex: return Todo.findAll({
+                     where: {
+                         completed: false
+                     }
+                  });
+            - Can take things a step further and search for words within a string, say, the description for example
+                - Using the "$like" keyword 
+            
+            - Ex: return Todo.findAll({
+                     where: {
+                         description: {
+                            $like: "%trash%"
+                         }
+                     }
+                  });
+                  
+                - Aren't you glad you took those Database/VB classes now?
+        - Extreme example of sequelize features
+            - See Example 14
+            
+Project: POST /todos
+    - 
+    
     
  
                                   Examples
@@ -594,3 +672,123 @@ app.get("/todos", function(req, res) {
     
     res.json(filteredTodos);
 });
+
+
+Example 12 - A Small Sequelize Example
+----------
+var Sequelize = require("sequelize");
+var sequelize = new Sequelize(undefined, undefined, undefined, {
+    "dialect": "sqlite",
+    "storage": "basic-sqlite-database.sqlite"
+});
+
+var Todo = sequelize.define('todo', {
+    description: {
+        type: Sequelize.STRING
+    },
+    completed: {
+        type: Sequelize.BOOLEAN
+    }
+});
+
+sequelize.sync().then(function() {
+    console.log("Everything is synced");
+});
+
+    - *NOTE* in the lecture, there is output showing the SQL statements needed to make what we did, but it doesn't show up on mine. To add it, change sync to:
+        - sequelize.sync({logging: console.log})
+        - Adding force: true forces sequelize to drop tables if they exist, before re-creating them
+
+
+Example 13 - Another Sequelize Example - Creating an Entry
+----------
+var Sequelize = require("sequelize");
+var sequelize = new Sequelize(undefined, undefined, undefined, {
+    "dialect": "sqlite",
+    "storage": __dirname + "/basic-sqlite-database.sqlite"
+});
+
+var Todo = sequelize.define('todo', {
+    description: {
+        type: Sequelize.STRING
+    },
+    completed: {
+        type: Sequelize.BOOLEAN
+    }
+});
+
+sequelize.sync({logging: console.log}).then(function() {
+    console.log("Everything is synced");
+    
+    Todo.create({
+        description: "Walking my dog",
+        completed: false
+    }).then(function(todo) {
+        console.log("Finished!");
+        console.log(todo);
+    });
+});
+
+
+Example 14 - Some Sequelize Features
+----------
+var Sequelize = require("sequelize");
+var sequelize = new Sequelize(undefined, undefined, undefined, {
+    "dialect": "sqlite",
+    "storage": __dirname + "/basic-sqlite-database.sqlite"
+});
+
+var Todo = sequelize.define('todo', {
+    description: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        validate: {
+            len: [1, 250] // makes description have to be a length between 1 and 250 characters
+        }
+    },
+    completed: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false // If a status isn't provided, make it false by default
+    }
+});
+
+sequelize.sync({/*force: true,*/ logging: console.log}).then(function() {
+    console.log("Everything is synced");
+    
+    Todo.findById(3).then(function(todo) {
+        console.log(todo? todo.toJSON() : "No todo found!");
+    });
+    
+    Todo.create({
+        description: "Take out trash"
+    }).then(function(todo) {
+        return Todo.create({
+            description: "Clean room"
+        });
+    }).then(function () {
+        // return Todo.findById(1);
+        return Todo.findAll({
+            where: {
+                description: {
+                    $like: "%Room%"
+                }
+            }
+        });
+    }).then(function(todos) {
+        if(todos)
+        {
+            todos.forEach(function (todo) {
+                console.log(todo.toJSON());
+            });
+        }
+        else
+            console.log("No todo found!");
+    }).catch(function (e) {
+        console.log(e);
+    });
+});
+
+
+Example 15 - 
+----------
