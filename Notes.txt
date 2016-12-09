@@ -318,7 +318,16 @@ Adding Model Validation & Fetching Models
             - See Example 14
             
 Project: POST /todos
-    - 
+    - created 'data' folder
+        - will house our sqlite database stuff
+    - import(<path to file>) method -> let's you import Sequelize models from other files
+        - in the other file:
+            - do a module.exports = function(sequelize, DataTypes)
+            - do sequelize.define(...){...} like before
+                - difference: instead of Sequelize.STRING, etc., do DataTypes.STRING, etc.
+                - DataTypes has everything Sequelize does
+    - New way to POST using database
+        - See Example 15
     
     
  
@@ -790,5 +799,19 @@ sequelize.sync({/*force: true,*/ logging: console.log}).then(function() {
 });
 
 
-Example 15 - 
+Example 15 - POST using Sequelize database
+----------
+// POST /todos
+app.post("/todos", function(req, res) {
+    var body = _.pick(req.body, "description", "completed");
+    
+    db.todo.create(body).then(function(todo) {
+        res.json(todo);
+    }).catch(function(e) {
+        res.status(400).json(e); 
+    });
+});
+
+
+Example 16 - 
 ----------
