@@ -338,8 +338,10 @@ Project: GET /todos/:id
     - todo !== null?
         - Could also do -> !!todo
             - Makes the object its actual boolean value (instead of "truth-y"/"false-y")
+            - Ex: var todo = null; // todo is falsy, because null is "falsy" by default
+                  var isboolean = !!todo // it now equals false
 
-Projett: GET /todos
+Project: GET /todos
     - 
     
     
