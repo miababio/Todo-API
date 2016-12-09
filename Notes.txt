@@ -328,6 +328,19 @@ Project: POST /todos
                 - DataTypes has everything Sequelize does
     - New way to POST using database
         - See Example 15
+    - One more thing: we dont wanna commit our sqlite file
+    - To unstage a file, you can use
+        - git reset HEAD data/dev-todo-api.sqlite
+        - Since it's also in .gitignore, it gets ignored
+
+Project: GET /todos/:id
+    - See Example 16
+    - todo !== null?
+        - Could also do -> !!todo
+            - Makes the object its actual boolean value (instead of "truth-y"/"false-y")
+
+Projett: GET /todos
+    - 
     
     
  
@@ -813,5 +826,14 @@ app.post("/todos", function(req, res) {
 });
 
 
-Example 16 - 
+Example 16 - GET todo by ID using Sequelize
 ----------
+// GET /todos:id
+app.get("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var matched = db.todo.findById(todoID).then(function(todo) {
+        todo !== null? res.json(todo) : res.status(404).send(); // Could also do !!todo?
+    }).catch(function() {
+        res.status(500).send(); 
+    });
+});

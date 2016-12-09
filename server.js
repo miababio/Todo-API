@@ -35,35 +35,22 @@ app.get("/todos", function(req, res) {
 // GET /todos:id
 app.get("/todos/:id", function(req, res) {
     var todoID = parseInt(req.params.id, 10);
-    var matched = _.findWhere(todos, {id: todoID});
-    matched !== undefined? res.json(matched) : res.status(404).send();
+    var matched = db.todo.findById(todoID).then(function(todo) {
+        todo !== null? res.json(todo) : res.status(404).send();
+    }).catch(function() {
+        res.status(500).send(); 
+    });
 });
 
 // POST /todos
 app.post("/todos", function(req, res) {
     var body = _.pick(req.body, "description", "completed");
     
-    //call create on db.todo db.todo.create()
-    //  if successfull, respond with 200 and value of todo (toJSON)
-    //if fails, send back error res.status(400).json(e)
     db.todo.create(body).then(function(todo) {
         res.json(todo);
     }).catch(function(e) {
         res.status(400).json(e); 
     });
-    
-    
-    /*if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0)
-        return res.status(400).send(); // 400 = bad data sent
-    
-    // set body.desc to be trimmed value
-    body.description = body.description.trim();
-    
-    body.id = todoNextId++;
-    
-    todos.push(body);
-    
-    res.json(body);*/
 });
 
 // DELETE /todos/:id
