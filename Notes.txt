@@ -342,7 +342,9 @@ Project: GET /todos/:id
                   var isboolean = !!todo // it now equals false
 
 Project: GET /todos
-    - 
+    - See Example 17
+    
+
     
     
  
@@ -837,5 +839,25 @@ app.get("/todos/:id", function(req, res) {
         todo !== null? res.json(todo) : res.status(404).send(); // Could also do !!todo?
     }).catch(function() {
         res.status(500).send(); 
+    });
+});
+
+Example 17 - GET todos + Query Parameters with Sequelize
+----------
+// GET /todos?completed=true&q=house
+app.get("/todos", function(req, res) {
+    var query = req.query;
+    var where = {};
+    
+    if(query.hasOwnProperty("completed") && query.completed === 'true')
+        where.completed = true;
+    else if(query.hasOwnProperty("completed") && query.completed === 'false')
+        where.completed = false;
+    if(query.hasOwnProperty("q") && query.q.length > 0)
+        where.description = {$like: "%" + query.q + "%"};
+    db.todo.findAll({where: where}).then(function(todos) {
+        res.json(todos);
+    }).catch(function(e) {
+        res.status(500).send();
     });
 });
