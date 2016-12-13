@@ -343,6 +343,12 @@ Project: GET /todos/:id
 
 Project: GET /todos
     - See Example 17
+    - If you made a mistake and committed, but haven't pushed, you can run:
+        - git --amend -am "<same message>"
+            - merges the two commits together and acts like it was one
+            
+Postgres on Heroku
+    - 
     
 
     
