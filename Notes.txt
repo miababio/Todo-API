@@ -348,7 +348,22 @@ Project: GET /todos
             - merges the two commits together and acts like it was one
             
 Postgres on Heroku
+    - First, we need to add an addon to heroku app (postgres)
+        - command line -> heroku addons: create heroku-postgresql:hobby-dev
+            - Creates free tier of postresql
+        - To test if database works, type "heroku pg:wait"
+            - causes the database to wait till it's finished
+        - To help convert our code to work with postgres, we need 2 new modules
+            - pg, version 4.4.1; Current is 6.1.2
+            - pg-hstore, version 2.3.2 (also current :D)
+    - To determine whether we use SQLite or Postgres, we will use Node's Evnironment Variables
+        - Environment Variables: Special variables that determine where Node is running
+        - In this case, we want to use Postgres when Node is running in PRODUCTION; If not, then SQLite
+        - With the heroku addon, we also got the DATABASE_URL environment variable, which stores our connection info
+        - Environment variables are strings
+        - See Example 18
     - 
+        
     
 
     
@@ -867,3 +882,27 @@ app.get("/todos", function(req, res) {
         res.status(500).send();
     });
 });
+
+
+Example 19 - Environment Variables - Production vs Deployment
+----------
+var env = process.env.NODE_ENV || "development";
+var sequelize;
+
+if(env === "production") // only true when running on heroku
+{
+    sequelize = new Sequelize(process.env.DATABASE_URL, {
+        dialect: "postgres"
+    });
+}
+else
+{
+    sequelize = new Sequelize(undefined, undefined, undefined, {
+    "dialect": "sqlite",
+    "storage": __dirname + "/data/dev-todo-api.sqlite"
+    });
+}
+
+
+Example 20 -
+----------
