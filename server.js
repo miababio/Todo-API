@@ -56,11 +56,12 @@ app.post("/todos", function(req, res) {
 // DELETE /todos/:id
 app.delete("/todos/:id", function(request, response) {
     var todoID = parseInt(request.params.id, 10);
-    var matched = db.todo.findById(todoID).then(function(todo) {
+    db.todo.findById(todoID).then(function(todo) {
         if(todo !== null)
         {
-            todo.destroy();
-            response.status(204).send(); // Everything went well and there's nothing to send back
+            todo.destroy().then(function() {
+                response.status(204).send(); // Everything went well and there's nothing to send back
+            });
         }
         else
             response.status(404).json({error: "No todo with that ID!"});
@@ -72,29 +73,29 @@ app.delete("/todos/:id", function(request, response) {
 // PUT /todos/:id
 app.put("/todos/:id", function(req, res) {
     var todoID = parseInt(req.params.id, 10);
-    var matched = _.findWhere(todos, {id: todoID});
     var body = _.pick(req.body, "description", "completed");
-    var validAttributes = {}; // items we want to add to todo
+    var attributes = {}; // items we want to add to todo
     
-    if(!matched)
-        return res.status(404).send(); // With send, it automatically stop below code from executing
-    
-    if(body.hasOwnProperty("completed") && _.isBoolean(body.completed))
-        validAttributes.completed = body.completed;
-    else if(body.hasOwnProperty("completed"))
-    {   // entered a property, but it's bad input (not a boolean)
-        return res.status(400).send();
-    }
+    if(body.hasOwnProperty("completed"))
+        attributes.completed = body.completed;
            
-    if(body.hasOwnProperty("description") && _.isString(body.description) && body.description.trim().length > 0)
-        validAttributes.description = body.description;
-    else if(body.hasOwnProperty("description"))
-    {   // entered a description, but it's bad input
-        return res.status(400).send();
-    }
+    if(body.hasOwnProperty("description"))
+        attributes.description = body.description;
     
-    _.extend(matched, validAttributes); // matched gets changed explicitly cuz objects in Javascript are pass by reference
-    res.json(matched);
+    db.todo.findById(todoID).then(function(todo) {
+        if(todo)
+        {
+            todo.update(attributes).then(function(todo) { // update was successful
+                res.json(todo.toJSON());
+            }, function(e) {      // update failed
+                res.status(400).json(e);
+            });
+        }
+        else
+            res.status(404).send();
+    }, function() {
+        res.status(500).send();
+    });
 });
 
 db.sequelize.sync({logging: console.log}).then(function() {

@@ -367,7 +367,17 @@ Project: DELETE /todos/:id
     - See Example 19
     - Deploy to heroku
     
-
+PUT /todos/:id
+    - So far, we've been using methods from Model
+    - Now, we want to use instance methods for this to work
+        - instance methods: Methods that are used from an instance variable
+            - Ex (Java): Scanner scanner = new Scanner();
+                         scanner.next(); <-- instance method
+    - Use the update() method
+        - update(<object of attributes you want to update>) 
+        - Ex: return todo.update(attributes)
+        
+    - 
         
     
 
@@ -914,11 +924,12 @@ Example 19 - Delete a todo by ID
 // DELETE /todos/:id
 app.delete("/todos/:id", function(request, response) {
     var todoID = parseInt(request.params.id, 10);
-    var matched = db.todo.findById(todoID).then(function(todo) {
+    db.todo.findById(todoID).then(function(todo) {
         if(todo !== null)
         {
-            response.status(204).send(); // Everything went well and there's nothing to send back
-            todo.destroy();
+            todo.destroy().then(function() {
+                response.status(204).send(); // Everything went well and there's nothing to send back
+            });
         }
         else
             response.status(404).json({error: "No todo with that ID!"});
