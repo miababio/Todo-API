@@ -350,7 +350,7 @@ Project: GET /todos
 Postgres on Heroku
     - First, we need to add an addon to heroku app (postgres)
         - command line -> heroku addons: create heroku-postgresql:hobby-dev
-            - Creates free tier of postresql
+            - Creates free tier of postgresql
         - To test if database works, type "heroku pg:wait"
             - causes the database to wait till it's finished
         - To help convert our code to work with postgres, we need 2 new modules
@@ -362,7 +362,12 @@ Postgres on Heroku
         - With the heroku addon, we also got the DATABASE_URL environment variable, which stores our connection info
         - Environment variables are strings
         - See Example 18
-    - 
+
+Project: DELETE /todos/:id
+    - See Example 19
+    - Deploy to heroku
+    
+
         
     
 
@@ -884,7 +889,7 @@ app.get("/todos", function(req, res) {
 });
 
 
-Example 19 - Environment Variables - Production vs Deployment
+Example 18 - Environment Variables - Production vs Deployment
 ----------
 var env = process.env.NODE_ENV || "development";
 var sequelize;
@@ -902,6 +907,43 @@ else
     "storage": __dirname + "/data/dev-todo-api.sqlite"
     });
 }
+
+
+Example 19 - Delete a todo by ID
+----------
+// DELETE /todos/:id
+app.delete("/todos/:id", function(request, response) {
+    var todoID = parseInt(request.params.id, 10);
+    var matched = db.todo.findById(todoID).then(function(todo) {
+        if(todo !== null)
+        {
+            response.status(204).send(); // Everything went well and there's nothing to send back
+            todo.destroy();
+        }
+        else
+            response.status(404).json({error: "No todo with that ID!"});
+    }).catch(function() {
+        response.status(500).send(); 
+    });
+});
+
+// ALTERNATE METHOD (Andrew's way)
+db.todo.destroy({
+    where: {
+        id: todoID
+    }
+}).then(function (rowsDeleted) {
+    if(rowsDeleted === 0)
+    {
+        res.status(404).json({ error: "No todo with that ID!"});
+    }
+    else
+    {
+        res.status(204).send(); // Everything went well and there's nothing to send back
+    }
+}, function() {
+    res.status(500).send();
+});
 
 
 Example 20 -

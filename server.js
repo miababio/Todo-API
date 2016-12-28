@@ -56,15 +56,17 @@ app.post("/todos", function(req, res) {
 // DELETE /todos/:id
 app.delete("/todos/:id", function(request, response) {
     var todoID = parseInt(request.params.id, 10);
-    var matched = _.findWhere(todos, {id: todoID});
-    if(matched === undefined)
-        response.status(404).json({"error": "No TODO found with that ID"});
-    else
-    {
-        var newTodos = _.without(todos, matched);
-        todos = newTodos;
-        response.json(matched);
-    }
+    var matched = db.todo.findById(todoID).then(function(todo) {
+        if(todo !== null)
+        {
+            todo.destroy();
+            response.status(204).send(); // Everything went well and there's nothing to send back
+        }
+        else
+            response.status(404).json({error: "No todo with that ID!"});
+    }).catch(function() {
+        response.status(500).send(); 
+    });
 });
 
 // PUT /todos/:id
