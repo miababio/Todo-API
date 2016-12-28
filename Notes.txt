@@ -377,6 +377,12 @@ PUT /todos/:id
         - update(<object of attributes you want to update>) 
         - Ex: return todo.update(attributes)
         
+    - See Example 20
+    - push to heroku
+    
+SECTION 8 - Adding Authentication
+---------------------------------
+Creating the User Model
     - 
         
     
@@ -957,5 +963,36 @@ db.todo.destroy({
 });
 
 
-Example 20 -
+Example 20 - Update a todo by ID
+----------
+// PUT /todos/:id
+app.put("/todos/:id", function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var body = _.pick(req.body, "description", "completed");
+    var attributes = {}; // items we want to add to todo
+    
+    if(body.hasOwnProperty("completed"))
+        attributes.completed = body.completed;
+           
+    if(body.hasOwnProperty("description"))
+        attributes.description = body.description;
+    
+    db.todo.findById(todoID).then(function(todo) {
+        if(todo)
+        {
+            todo.update(attributes).then(function(todo) { // update was successful
+                res.json(todo.toJSON());
+            }, function(e) {      // update failed
+                res.status(400).json(e);
+            });
+        }
+        else
+            res.status(404).send();
+    }, function() {
+        res.status(500).send();
+    });
+});
+
+
+Example 21 -
 ----------
