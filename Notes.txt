@@ -406,7 +406,41 @@ Using Sequelize Hooks for Validation
         - See Example 22
         
 Hashing and Salting Passwords
+    - Goal is to store a hashed password in our databse instead of the plaintext (toldya we'd fix it!)
+    - New npm module -> bcrypt
+        - NOTE: bcrypt requires Python installed. There's also been other comments of user's not getting it to work on Windows 10. So instead, it's recommended to use bcryptjs
+    - bcryptjs -> version 2.4.0 (also the latest)
+        - This lets us use hashing algorithms
+        - Different than before. For passwords, we encrypted/decrypted them using keys
+        - Hashing is one-way, meaning that once you hash a string (say, "abc123"), you get a hash back. Once you have that,
+                     -------
+        there's no way to take that hash and turn it back into "abc123"
+        - The key to this is that, the string "abc123" should always produce the same hash
+    - user.js -> adding salt and password_hash properties
+        - salt: When hashing data, you get the same result everytime, so if two people had the same password for example, just looking at the hash value could tell you that you have the same password. What salt does is that it adds some random characters to the plaintext password before it's hashed. That way, when the password is hashed, the resulting hash is different. In order to figure out the password, someone would have to try all password combinations with the same salt in order to get it, and that could take literally FOREVER.
+        
+        - password -> now use DataTypes.VIRTUAL
+            - VIRTUAL types don't get stored i nthe database, but they are still accessible
+            - Means we could set a password for our user object, and it will never be stored in the database 
+                - This is nice because we can override when we set the password; When we set the plaintext password, we want to salt it, and then hash it
+        - See Example 23
+            - this.SetDataValue(<string of property>, <value you want to set it to>)
+                - setDataValue lets you set a value for a property for you current instance of user
+                    - Similar to setting variables using "this" in Java if it helps you think of it that way
+            - The salt contains 29 characters
+                - First 7: Display how many salt rounds were done (between the three $ signs)
+                - Next 22 characters: the actual salt value
+    - Things are working great! Except...
+        - We're shoing fields we don't want the user to see! (password, salt, password_hash)
+        - We need to hide these!
+        - We'll use an instance method again
+            - If you forgot, that's just a fancy way of saying a method invoked by a user instance
+        - See Exmaple 24
+        
+POST /users/login
     - 
+            
+                     
 
     
     
@@ -1039,3 +1073,58 @@ Example 22 - Hooks Example
         }
     }
 }
+
+
+Example 23 - Hash/Salt Setup (user.js)
+----------
+salt: {
+  type: DataTypes.STRING  
+},
+password_hash: {
+    type: DataTypes.STRING
+},
+password: {
+    type: DataTypes.VIRTUAL,
+    allowNull: false,
+    validate: {
+        len: [7, 100] // password is 7-100 characters
+    },
+    set: function(value) { // Apparently this gets called when we try to add the password
+        var salt = bcrypt.genSaltSync(10); // # salt rounds
+        var hashedPassword = bcrypt.hashSync(value, salt); // value you want hashed, salt to add to hash
+
+        this.setDataValue("password", value);               // Sets the password to the plaintext password
+        this.setDataValue("salt", salt);                    // Sets the salt property to the generated salt
+        this.setDataValue("password_hash", hashedPassword); // Sets the hashed password to the password_hash for display
+    }
+}
+
+
+Example 24 - Hide password data from public
+----------
+
+user.js
+-------
+instanceMethods: {
+    toPublicJSON: function() {
+        var json = this.toJSON();
+        return _.pick(json, "id", "email", "updatedAt", "createdAt");
+    }
+}
+
+server.js
+---------
+// POST /users
+app.post("/users", function(req, res) {
+    var body = _.pick(req.body, "email", "password");
+    
+    db.user.create(body).then(function(user) {
+        res.json(user.toPublicJSON());        // Only shows id, email, createdAt, updatedAt; password/salt/hash are in database
+    }).catch(function(e) {
+        res.status(400).json(e); 
+    });
+});
+
+
+Example 25 - 
+----------
