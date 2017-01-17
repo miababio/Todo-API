@@ -383,7 +383,11 @@ PUT /todos/:id
 SECTION 8 - Adding Authentication
 ---------------------------------
 Creating the User Model
-    - 
+    - Added user.js
+        - Similar setup to todo.js
+    - Linking new user database (by making POSTs)
+        - See Example 21
+    
         
     
 
@@ -994,5 +998,19 @@ app.put("/todos/:id", function(req, res) {
 });
 
 
-Example 21 -
+Example 21 - Creating a user
+----------
+// POST /users
+app.post("/users", function(req, res) {
+    var body = _.pick(req.body, "email", "password");
+    
+    db.user.create(body).then(function(user) {
+        res.json(user);
+    }).catch(function(e) {
+        res.status(400).json(e); 
+    });
+});
+
+
+Example 22 - 
 ----------

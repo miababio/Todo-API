@@ -20,6 +20,7 @@ else
 var db = {};
 
 db.todo = sequelize.import(__dirname + "/models/todo.js"); //import todo model (todo.js)
+db.user = sequelize.import(__dirname + "/models/user.js");
 db.sequelize = sequelize; //create sequelize object
 db.Sequelize = Sequelize;
 
