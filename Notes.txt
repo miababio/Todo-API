@@ -388,8 +388,25 @@ Creating the User Model
     - Linking new user database (by making POSTs)
         - See Example 21
     
-        
+Using Sequelize Hooks for Validation
+    - Problem in the security
+        - Passwords in plaintext (will fix later)
+        - If you go to Postman
+            - email: michael@example.com and Michael@example.com are DIFFERENT!
+                - It currently accepts both because email doesn't look at capitalization
     
+    - Solution to fix this -> Hooks
+        - Hook: Let's you run code before or after a certain event happens
+            - Can be creation, validation, destroying something, etc.
+        - We'll use the "beforeValidate " hook to fix our issue
+            - beforevalidate: function(<model>, options)
+            - Ex: beforevalidate: function(user, options) {user.mood = "happy"}
+        - Three ways to define a hook, but the way we're doing it is in the define() method in user.js
+            - for beforeValidate, we'll make the email all lowercase, so we won't have to worry abou case sensitivity
+        - See Example 22
+        
+Hashing and Salting Passwords
+    - 
 
     
     
@@ -1012,5 +1029,13 @@ app.post("/users", function(req, res) {
 });
 
 
-Example 22 - 
+Example 22 - Hooks Example
 ----------
+{
+    hooks: {
+        beforeValidate: function(user, options) {
+            if(typeof user.email === "string")
+                user.email = user.email.toLowerCase();
+        }
+    }
+}

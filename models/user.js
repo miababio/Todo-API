@@ -18,6 +18,13 @@ module.exports = function(sequelize, DataTypes) {
             }
         }
     },  {
+        hooks: {
+            beforeValidate: function(user, options) {
+                if(typeof user.email === "string")
+                    user.email = user.email.toLowerCase();
+            }
+        }
+    }, {
         validate: {
             emailIsString: function() {
                 if(!_.isString(this.email))
@@ -27,6 +34,6 @@ module.exports = function(sequelize, DataTypes) {
                 if(!_.isString(this.password))
                     throw new Error("Password must be a string.")
             }
-        }
+        }       
     });
 };
