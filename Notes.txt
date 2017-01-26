@@ -437,10 +437,26 @@ Hashing and Salting Passwords
             - If you forgot, that's just a fancy way of saying a method invoked by a user instance
         - See Exmaple 24
         
-POST /users/login
+Log in users (POST /users/login)
+    - Create a new Route in Express for logging in (POST /users/login)
+        - Will take an email and a password
+    - Use the compareSync() method to compare the plaintext password with the hashed password
+        - Ex: bcrypt.compareSync(body.password, user.get("password_hash"))
+            - The get(<property as string>) method gets the value of a property you have defined in an object
+    - See Example 25
+    - P.S. -> You can remove the Salt column from the database if you want. Bcrypt has the salt supported in the hash, so there's no need to keep the salt there. Some hash algolrithms don't have the salt supported, which is why sometimes you'd want a coulmn for the salt. However, in this case, you don't.
+    
+Custom Sequelize Class Methods
+    - We've added a bit of code into the express functions to get the login working
+        - Want to make it as small as possible. Soo....time to refactor!!
+    - We want to move our code in the User model (user.js)...but how?
+        - Custom method in Sequelize
+        - We'll create a Class Method (instead of an instance method)
+            - This let's us do for example, db.user.authenticate(body)
+    - See Example 26
+
+Generating a JWT for Authentication
     - 
-            
-                     
 
     
     
@@ -1126,5 +1142,64 @@ app.post("/users", function(req, res) {
 });
 
 
-Example 25 - 
+Example 25 - Getting user from email and password
 ----------
+// POST /users/login
+app.post("/users/login", function(req, res) {
+    var body = _.pick(req.body, "email", "password");
+    var where = {email: body.email};
+    
+    if(typeof body.email !==  "string" || typeof body.password !== "string")
+        return res.status(400).send();
+    
+    db.user.findOne({where: where}).then(function(user) {
+        if(!user || !bcrypt.compareSync(body.password, user.get("password_hash"))) // !user is the same as user === null
+            return res.status(401).send();
+        res.json(user.toPublicJSON());
+    }, function(e) {
+        res.status(500).send();
+    });
+});
+
+
+Example 26 - Refactoring By Custom Sequelize Methods
+----------
+
+    user.js
+    -------
+    classMethods: {
+        authenticate: function(body) {
+            return new Promise(function (resolve, reject) {
+                var where = {email: body.email};
+
+                if(typeof body.email !==  "string" || typeof body.password !== "string")
+                    return reject();
+
+                user.findOne({where: where}).then(function(user) {
+                    if(!user || !bcrypt.compareSync(body.password, user.get("password_hash")))
+                        return reject();
+                    resolve(user);
+                }, function(e) {
+                    reject();
+                });
+            });
+        }
+    },
+
+    server.js
+    ---------
+    // POST /users/login
+    app.post("/users/login", function(req, res) {
+        var body = _.pick(req.body, "email", "password");
+
+        db.user.authenticate(body).then(function(user) {
+            res.json(user.toPublicJSON());
+        }, function() {
+            res.status(401).send();
+        });
+    });
+    
+
+Example 27 -
+----------
+
