@@ -455,8 +455,27 @@ Custom Sequelize Class Methods
             - This let's us do for example, db.user.authenticate(body)
     - See Example 26
 
-Generating a JWT for Authentication
+Generating a JWT (JSON Web Token) for Authentication (Auth Token)
+    - When we make a successful login request, we want to generate an Authentication Token for that user, so that they can create/update/delete their own todos, and without seeing or messing anyone else's todos
+    - For now, we're going to generate an Auth Token and get a custom header back when we do a POST request for users
+        - users.js -> Create a new instance method to handle the generation
+            - It's an instance method vs a class method because we only want to affect the current user. When we do a POST request on users/login, we have a user as an arguement (see function POST /users/login)
+        - Install 2 new npm modules
+            - jsonwebtoken
+                - Using 5.0.5; Current is 7.3.0
+            - crypto-js (used before in password manager section)
+                - Using 3.1.5; Latest is 3.1.9-1
+        - See Example 27
+            - var stringData = JSON.stringify({id: this.get("id"), type: type});
+            
+                - Takes user's id and type, and turns in into a JSON string
+                - We need a string because AES.encrypt only does strings
+                - We use 'this.get' to get a value from our current instance user
+                    - Think of this like in Java doing this.id or this.something; same concept
+
+Making Todo Routes Private (Creating Custom Middleware)
     - 
+            
 
     
     
@@ -1200,6 +1219,44 @@ Example 26 - Refactoring By Custom Sequelize Methods
     });
     
 
-Example 27 -
+Example 27 - Generating a JWT Token
+----------
+generateToken: function(type) {
+    // create a new, encrypted token that gets returned back to the user
+    if(!_.isString(type))
+        return undefined;
+    try
+    {
+        // takes user's id and type, and turns in into a JSON string
+        var stringData = JSON.stringify({id: this.get("id"), type: type}); 
+        
+        //take user's id and token type, and encrypt both
+        var encryptedData = cryptojs.AES.encrypt(stringData, "abc123!!").toString();
+        
+        var token = jwt.sign({
+            token: encryptedData
+        }, "qwerty123");
+        return token;
+    }
+    catch(e)
+    {
+        return undefined; // no valid token generated
+    }
+}
+
+    In server.js (POST /users/login)
+    ------------
+    res.header("Auth", user.generateToken("authentication")).json(user.toPublicJSON());
+
+    To Test In Postman
+    ------------------
+        - First, create a user (POST /users)
+        - Then, enter the same info to log them in (POST /users/login)
+        - When you get a response, check the "Headers" tab
+            - Should see an 'Auth' section with a looonng string
+                - Contains info such as time issued, user's id, type of token (authentication)
+
+
+Example 28 -
 ----------
 
