@@ -57,6 +57,32 @@ module.exports = function(sequelize, DataTypes) {
                         reject();
                     });
                 });
+            },
+            findByToken: function(token) {
+                return new Promise(function(resolve, reject) {
+                    try
+                    {
+                        // Checks token and make sure it hasn't been modified/is the same
+                        var decodedJWT = jwt.verify(token, "qwerty123");
+                        // decrypt the data
+                        var bytes = cryptojs.AES.decrypt(decodedJWT.token, "abc123!!");
+                        // Convert bytes to JSON data
+                        var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+                        // now we have the data as a JSON object, that contains the ID and the Type; Now we simply search by ID
+                        user.findById(tokenData.id).then(function(user) {
+                            if(user)
+                                resolve(user);
+                            else
+                                reject();
+                        }, function(e) {
+                            reject();
+                        });
+                    }
+                    catch(e)
+                    {
+                        reject();
+                    }
+                });
             }
         },
         instanceMethods: {

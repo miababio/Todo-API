@@ -398,7 +398,7 @@ Using Sequelize Hooks for Validation
     - Solution to fix this -> Hooks
         - Hook: Let's you run code before or after a certain event happens
             - Can be creation, validation, destroying something, etc.
-        - We'll use the "beforeValidate " hook to fix our issue
+        - We'll use the "beforeValidate" hook to fix our issue
             - beforevalidate: function(<model>, options)
             - Ex: beforevalidate: function(user, options) {user.mood = "happy"}
         - Three ways to define a hook, but the way we're doing it is in the define() method in user.js
@@ -474,6 +474,24 @@ Generating a JWT (JSON Web Token) for Authentication (Auth Token)
                     - Think of this like in Java doing this.id or this.something; same concept
 
 Making Todo Routes Private (Creating Custom Middleware)
+    - Now we will move our todo items to be private and require the JWT token to be set
+    - Our login token will have to be set as the header before we can make any todo rquests
+    - In order to intercept the token before we do anything, we'll make some custom middleware before we make the todos private
+    - First, we create middleware.js
+        - This is where we'll put all our middleware code
+        - You'll notice that when creating our middlewate functions, there's an extra parameter -> function(req, res, next)
+            - Middleware code is run before our regular code (app.get, function() ..., app.post, etc.)
+            - After you call the 'next' argument, then the regular code gets exectued
+                - If you don't call the 'next' at all, then the private code does not run
+            - This is what we'll use to make our Todo routes private
+        - See Example 28
+    - Test new stuff in Postman
+        - In the Headers tab, add "Auth" for header, and "{{authToken}}" for Value
+        - Manage the Todo API Local environment and copy/past the Auth token into there
+    - Now the next thing we need to do is seperate the data, so that individual users oonly see their own todos
+        - Right now when I log in, I can see anybody's todos
+
+Playing With Associations
     - 
             
 
@@ -1257,6 +1275,68 @@ generateToken: function(type) {
                 - Contains info such as time issued, user's id, type of token (authentication)
 
 
-Example 28 -
+Example 28 - Making Todo Routes Private
 ----------
 
+    middleware.js
+    -------------
+    module.exports = function(db) { 
+        return {
+            requireAuthentication: function(req, res, next) {
+                var token = req.get("Auth"); // Get out token
+                db.user.findByToken(token).then(function (user) { // Find a user by the token (custom method we made)
+                    // Add a user to the request object; Let's us access user inside of each individual request
+                    req.user = user;
+                    next();
+                }, function() {
+                   res.status(401).send(); 
+                }); 
+            }    
+        };
+    };
+
+    user.js (class methods section)
+    -------
+    findByToken: function(token) {
+        return new Promise(function(resolve, reject) {
+            try
+            {
+                // Checks token and make sure it hasn't been modified/is the same
+                var decodedJWT = jwt.verify(token, "qwerty123");
+                // decrypt the data
+                var bytes = cryptojs.AES.decrypt(decodedJWT.token, "abc123!!");
+                // Convert bytes to JSON data
+                var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+                // now we have the data as a JSON object, that contains the ID and the Type; Now we simply search by ID
+                user.findById(tokenData.id).then(function(user) {
+                    if(user)
+                        resolve(user);
+                    else
+                        reject();
+                }, function(e) {
+                    reject();
+                });
+            }
+            catch(e)
+            {
+                reject();
+            }
+        });
+    }
+
+    server.js (a few examples)
+    ----------
+    app.get("/todos", middleware.requireAuthentication, function(req, res) {...}
+    app.get("/todos/:id", middleware.requireAuthentication, function(req, res) {...}
+    app.post("/todos", middleware.requireAuthentication, function(req, res) {...}
+    
+    Testing in Postman
+    ------------------
+        - Try posting a todo (Get a 401 - Unauthorized)
+        - Create a user (post /users)
+        - Login with that user (post /users/login)
+        - Try adding, getting, deleting a todo (should work now that you're logged in)
+
+
+Example 29 -
+----------
