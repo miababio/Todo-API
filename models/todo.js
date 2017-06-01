@@ -14,16 +14,5 @@ module.exports = function(sequelize, DataTypes) {
             allowNull: false,
             defaultValue: false // If a status isn't provided, make it false by default
         }
-    },  {
-        validate: {
-            descriptionIsString: function() {
-                if(!_.isString(this.description))
-                    throw new Error("Description must be a string.")
-            },
-            completedIsBoolean: function() {
-                if(!_.isBoolean(this.completed))
-                    throw new Error("Completed must be a boolean.")
-            }
-        }
     });
 };

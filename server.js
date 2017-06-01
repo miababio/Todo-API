@@ -49,8 +49,12 @@ app.post("/todos", middleware.requireAuthentication, function(req, res) {
     var body = _.pick(req.body, "description", "completed");
     
     db.todo.create(body).then(function(todo) {
-        res.json(todo);
-    }).catch(function(e) {
+        req.user.addTodo(todo).then(function() {
+           return todo.reload();    // We reload because the todo above is different than the one in the database
+        }).then(function (todo) {   // This is the updated todo
+           res.json(todo.toJSON());          // Then we do as before
+        });
+    }, function(e) {
         res.status(400).json(e); 
     });
 });

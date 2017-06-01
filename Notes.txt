@@ -492,8 +492,36 @@ Making Todo Routes Private (Creating Custom Middleware)
         - Right now when I log in, I can see anybody's todos
 
 Playing With Associations
+    - Assosciations let's you assoiciate data with certain other data (gasp)
+    - In our case, we want a user to have a todo, and a todo to belong to a certain user
+        - We want to know who created what todo, so that they can edit it
+    - We'll use sequelize to set up the associations
+    - There's only a few ways to do it using this method
+        - One-to-One Association
+        - One-to-Many Association
+        - Many-to-Many Association
+    - We'll use the One-to-Many Association for this; A user can have many todos, and many todos can belong to one user
+    
+    - Todo.belongsTo(User);
+      User.hasMany(Todo);
+    
+        - User = model that the todo belongs to
+        - Using these two lines, Sequelize adds a foreign key between the User and Todo tables
+        
+    - If you run the code and open DB browser and look at the sqlite file, you'll notice that the todos table has an extra column labeled "userId" at the end. That is the foreign key provided by sequelize that links the todo with a user id
+    - See Example 29
+    - Aside from assigning a todo to a certain user, we can also get all of the todos created by a user
+        - user.getTodos(<where object to filter todos>)
+            - Sequelize gives us a method to get whatever model we create with this method; it also adds the 's' at the end
+            - So it relaly looks like .get<model name>s(<where object to filter todos>)
+    - See Example 30
+    
+Associating Users with Their Todo
+    - Problem: we can still GET all of the todos, regardless of whatever user is logged in!
+    - Will fix in next lecture
+
+Associating Users with Their Todo, Pt. 2
     - 
-            
 
     
     
@@ -1338,5 +1366,48 @@ Example 28 - Making Todo Routes Private
         - Try adding, getting, deleting a todo (should work now that you're logged in)
 
 
-Example 29 -
+Example 29 - Associate Todo with a User
+----------
+var User = sequelize.define("user", {
+    email: Sequelize.STRING // shorthand for email: {type: Sequelize.STRING}
+});
+
+Todo.belongsTo(User); // User = model that the todo belongs to
+User.hasMany(Todo);
+
+sequelize.sync({force: true, logging: console.log}).then(function() {
+    console.log("Everything is synced");
+    
+    User.create({
+        email: "michael@example.com"
+    }).then(function() {
+        return Todo.create({
+            description: "Clean yard"
+        });
+    }).then(function (todo) {
+        User.findById(1).then(function (user) {
+            user.addTodo(todo);
+        });
+    });
+});
+
+    - Then open DB Browser and look at the "Browse Data" tab
+    
+    
+Example 30 - Associate User with a todo/filter them
+----------
+sequelize.sync({/*force: true, */logging: console.log}).then(function() {
+    console.log("Everything is synced");
+    
+    User.findById(1).then(function(user) {
+        user.getTodos({where: {completed: false}}).then(function (todos) {
+            todos.forEach(function (todo) {
+                console.log(todo.toJSON());
+            });
+        });
+    });
+});
+
+
+Example 31 -
 ----------
