@@ -513,14 +513,20 @@ Playing With Associations
     - Aside from assigning a todo to a certain user, we can also get all of the todos created by a user
         - user.getTodos(<where object to filter todos>)
             - Sequelize gives us a method to get whatever model we create with this method; it also adds the 's' at the end
-            - So it relaly looks like .get<model name>s(<where object to filter todos>)
+            - So it really looks like .get<model name>s(<where object to filter todos>)
     - See Example 30
     
 Associating Users with Their Todo
+    - Note: To get to work, I had to remove the custom validators in todo.js (thanks Andrew!)
     - Problem: we can still GET all of the todos, regardless of whatever user is logged in!
     - Will fix in next lecture
+    - See Example 31 for changes/additions
 
 Associating Users with Their Todo, Pt. 2
+    - Updated code to only show user-specific todos for logged in users when doing a GET, PUT, and DELETE request
+    - See Example 32
+    
+Deploying to Heroku
     - 
 
     
@@ -1409,5 +1415,74 @@ sequelize.sync({/*force: true, */logging: console.log}).then(function() {
 });
 
 
-Example 31 -
+Example 31 - Associating Users w/ Todos - POST
 ----------
+
+    db.js
+    -----
+    db.todo.belongsTo(db.user);
+    db.user.hasMany(db.todo);
+
+    server.js
+    ---------
+    // POST /todos
+    app.post("/todos", middleware.requireAuthentication, function(req, res) {
+        var body = _.pick(req.body, "description", "completed");
+
+        db.todo.create(body).then(function(todo) {
+            req.user.addTodo(todo).then(function() {
+               return todo.reload();    // We reload because the todo above is different than the one in the database
+            }).then(function (todo) {   // This is the updated todo
+               res.json(todo.toJSON());          // Then we do as before
+            });
+        }, function(e) {
+            res.status(400).json(e); 
+        });
+    });
+    
+    
+Example 32 - Associating Users w/ Todos - GET, PUT, DELETE
+----------
+// GET /todos?completed=true&q=house
+app.get("/todos", middleware.requireAuthentication, function(req, res) {
+    var query = req.query;
+    var where = {userId: req.user.get('id')};
+    ...
+    
+// GET /todos:id
+app.get("/todos/:id", middleware.requireAuthentication, function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var matched = db.todo.findOne({
+        where: {
+            id: todoID,
+            userId: req.user.get("id")
+        }
+    ...
+    
+// PUT /todos/:id
+app.put("/todos/:id", middleware.requireAuthentication, function(req, res) {
+    var todoID = parseInt(req.params.id, 10);
+    var body = _.pick(req.body, "description", "completed");
+    var attributes = {}; // items we want to add to todo
+    
+    ...
+    
+    db.todo.findOne({
+        where: {
+            id: todoID,
+            userId: req.user.get("id")
+        }
+    ...
+    
+// DELETE /todos/:id
+app.delete("/todos/:id", middleware.requireAuthentication, function(request, response) {
+    var todoID = parseInt(request.params.id, 10);
+    db.todo.destroy({
+        where: {
+            id: todoID,
+            userId: request.user.get("id")
+        }
+    ...
+    
+Example 33 -
+    
