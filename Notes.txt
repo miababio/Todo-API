@@ -545,7 +545,14 @@ Logging Users Out - Part 2
         - Add a new route
             - We need to add a route to delete a login instance
     - See Example 34
-
+    - Some features to maybe add later:
+        - Can add an Angular front end if you like
+        - Can turn this into a mobile app, using the same API if you wish (Android, iOS w/ Swift, etc.)
+        - Adding a due date to tasks
+            - Figure out how to use dates in Sequelize and check to see when a task is past its due date
+        - Send an email to someone when they sign up
+            - Can use the Postmark API
+            - ~2500 emails on Free tier
     
     
  
