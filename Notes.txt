@@ -526,8 +526,25 @@ Associating Users with Their Todo, Pt. 2
     - Updated code to only show user-specific todos for logged in users when doing a GET, PUT, and DELETE request
     - See Example 32
     
-Deploying to Heroku
-    - 
+Logging Users Out - Part 1
+    - Right now in server.js, when we log a user in, all we do is check to see if the user exists and if they do, we generate a token for them
+        - Problem: We aren't keeping track of generated tokens
+            - If you wanted to log out, there's no way of doing it
+            - If someone else gets your token, then it'll still be seen as valid
+    - By storing tokens in our database, we can log out users, and then delete them from the database so they can no longer be used
+    - We're going to create a token model (token.js) so that sequelize can store the tokens properly
+        - To be more specific, we;re storing the hash of the token
+            - You don't want to store unencrypted or not hashed information directly in the database
+    - See Example 33
+    
+Logging Users Out - Part 2
+    - 2 big things left to do
+        - Update middleware.js
+            - Right now, it doesn't care if the token we pass in is even in the database or not
+            - Thw whole point is to only use valid tokens in the database
+        - Add a new route
+            - We need to add a route to delete a login instance
+    - See Example 34
 
     
     
@@ -1484,5 +1501,91 @@ app.delete("/todos/:id", middleware.requireAuthentication, function(request, res
         }
     ...
     
-Example 33 -
-    
+Example 33 - Logging Users Out - Setup Part 1
+----------
+
+    token.js
+    --------
+    var cryptojs = require("crypto-js");
+
+    module.exports = function(sequelize, DataTypes) {
+        return sequelize.define("token", {
+           token: {
+               type: DataTypes.VIRTUAL,
+               allowNull: false,
+               validate: {
+                   len: [1] //valid if token length it greater than 1
+               },
+               set: function(value) {
+                   var hash = cryptojs.MD5(value).toString();
+                   this.setDataValue("token", value);
+                   this.setDataValue("tokenHash", hash);
+               }
+           },
+           tokenHash: DataTypes.STRING
+        });
+    }
+
+    server.js
+    ---------
+    app.post("/users/login", function(req, res) {
+        var body = _.pick(req.body, "email", "password");
+        var userInstance;
+
+        db.user.authenticate(body).then(function(user) {
+            var token = user.generateToken("authentication");
+            userInstance = user;
+            return db.token.create({
+                token: token // though the token is saved here, the HASH is what gets made and put in the database
+            });
+        }).then(function(tokenInstance){
+            res.header("Auth", tokenInstance.get('token')).json(userInstance.toPublicJSON());
+        }).catch(function(e) {
+            console.log("e", e);
+            res.status(401).send();
+        });
+    });
+
+
+Example 34 - Logging Users Out - Setup Part 2
+----------
+
+    middleware.js
+    -------------
+    var cryptojs = require("crypto-js");
+
+    module.exports = function(db) { 
+        return {
+            requireAuthentication: function(req, res, next) {
+                var token = req.get("Auth") || "";
+
+                db.token.findOne({ // find token in the database that user provided
+                    where: {
+                        tokenHash: cryptojs.MD5(token).toString()
+                    }
+                }).then(function(tokenInstance) {
+                    if(!tokenInstance) // If there is no token
+                        throw new Error();
+                    // save token to request object
+                    req.token = tokenInstance;
+                    return db.user.findByToken(token);
+                }).then(function(user) {
+                    req.user = user; // set user object to request object
+                    next();
+                }).catch(function() {
+                    res.status(401).send();
+                });
+            }    
+        };
+    };
+
+    server.js
+    ---------
+    // DELETE /users/login
+    app.delete("/users/login", middleware.requireAuthentication, function(req, res) {
+        req.token.destroy().then(function() {
+            res.status(204).send();
+        }).catch(function() {
+            res.status(500).send();
+        });
+    });
